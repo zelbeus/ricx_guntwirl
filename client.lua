@@ -15,15 +15,15 @@ local Prompts = {
     Next = 0x446258B6,
 }
 
+local playingGunTrick = nil
+
 local tricks = {
     {`KIT_EMOTE_TWIRL_GUN`, "Twirl"},
     {`KIT_EMOTE_TWIRL_GUN_DUAL`,"Dual Twirl"},
-   -- {`KIT_EMOTE_TWIRL_GUN_HOLD`,"Hold Twirl"},
-    {`KIT_EMOTE_TWIRL_GUN_LEFT_HOLSTER`,"Left Twirl"},
-   -- {`KIT_EMOTE_TWIRL_GUN_VAR_A`,"Twirl A"},
-   -- {`KIT_EMOTE_TWIRL_GUN_VAR_B`,"Twirl B"},
-   -- {`KIT_EMOTE_TWIRL_GUN_VAR_C`,"Twirl C"},
-   -- {`KIT_EMOTE_TWIRL_GUN_VAR_D`,"Twirl D"},
+   {`KIT_EMOTE_TWIRL_GUN_VAR_A`,"Twirl A"},
+   {`KIT_EMOTE_TWIRL_GUN_VAR_B`,"Twirl B"},
+   {`KIT_EMOTE_TWIRL_GUN_VAR_C`,"Twirl C"},
+   {`KIT_EMOTE_TWIRL_GUN_VAR_D`,"Twirl D"},
 } 
 
 function SetupTrickPrompt()
@@ -89,8 +89,11 @@ Citizen.CreateThread(function() --
             local label  = CreateVarString(10, 'LITERAL_STRING', "Trick: "..tricks[index][2])
             PromptSetActiveGroupThisFrame(TrickPrompts, label)
             if Citizen.InvokeNative(0xC92AC953F0A982AE,TrickDoPrompt) then
-                StartTrick(tricks[index][1])
-            
+                if index < 3 then
+                    StartTrick(tricks[index][1])
+                else
+                    TrickVariation(index)
+                end
             end
             if Citizen.InvokeNative(0xC92AC953F0A982AE,TrickEndPrompt) then
                 tricking = false
@@ -121,10 +124,23 @@ function IsWeaponPistol(hash)
 end
 
 function StartTrick(trickhash)
-	local hasw, playerw = GetCurrentPedWeapon(PlayerPedId(),1)
+local hasw, playerw = GetCurrentPedWeapon(PlayerPedId(),1)
     if IsWeaponRevolver(playerw) or IsWeaponPistol(playerw) then
+	playingGunTrick = trickhash
         Citizen.InvokeNative(0xB31A277C1AC7B7FF, PlayerPedId(), 4, 1, trickhash, 1, 1, 0, 0)  
     end
+end
+
+function TrickVariation(ind)
+    local ped = PlayerPedId()
+    local emote = `KIT_EMOTE_TWIRL_GUN`
+    if playingGunTrick ~= nil then
+        emote = playingGunTrick
+    end
+    Citizen.InvokeNative(0xCBCFFF805F1B4596, ped, emote)
+    Citizen.InvokeNative(0xB31A277C1AC7B7FF, ped, 4, 1, Citizen.InvokeNative(0x2C4FEC3D0EFA9FC0, ped), true, false, false, false, false)
+    Citizen.InvokeNative(0x01F661BB9C71B465, ped, 4, N_0xf4601c1203b1a78d(emote, ind))
+    Citizen.InvokeNative(0x408CF580C5E96D49, ped, 4)
 end
 
 AddEventHandler('onResourceStop', function(resourceName)
