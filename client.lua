@@ -115,6 +115,14 @@ Citizen.CreateThread(function() --
     end
 end)
 
+function CanTwirl(hash)
+	if (IsWeaponRevolver(hash) or IsWeaponPistol(hash)) then
+		return true
+	else
+		return false
+	end
+end
+
 function IsWeaponRevolver(hash)
     return Citizen.InvokeNative(0xC212F1D05A8232BB, hash)
 end
@@ -125,22 +133,25 @@ end
 
 function StartTrick(trickhash)
 local hasw, playerw = GetCurrentPedWeapon(PlayerPedId(),1)
-    if IsWeaponRevolver(playerw) or IsWeaponPistol(playerw) then
+    if CanTwirl(playerw) then
 	playingGunTrick = trickhash
         Citizen.InvokeNative(0xB31A277C1AC7B7FF, PlayerPedId(), 4, 1, trickhash, 1, 1, 0, 0)  
     end
 end
 
 function TrickVariation(ind)
-    local ped = PlayerPedId()
-    local emote = `KIT_EMOTE_TWIRL_GUN`
-    if playingGunTrick ~= nil then
-        emote = playingGunTrick
-    end
-    Citizen.InvokeNative(0xCBCFFF805F1B4596, ped, emote)
-    Citizen.InvokeNative(0xB31A277C1AC7B7FF, ped, 4, 1, Citizen.InvokeNative(0x2C4FEC3D0EFA9FC0, ped), true, false, false, false, false)
-    Citizen.InvokeNative(0x01F661BB9C71B465, ped, 4, N_0xf4601c1203b1a78d(emote, ind))
-    Citizen.InvokeNative(0x408CF580C5E96D49, ped, 4)
+	local ped = PlayerPedId()
+	local hasw, playerw = GetCurrentPedWeapon(ped,1)
+	if CanTwirl(playerw) then
+	    local emote = `KIT_EMOTE_TWIRL_GUN`
+	    if playingGunTrick ~= nil then
+		emote = playingGunTrick
+	    end
+	    Citizen.InvokeNative(0xCBCFFF805F1B4596, ped, emote)
+	    Citizen.InvokeNative(0xB31A277C1AC7B7FF, ped, 4, 1, Citizen.InvokeNative(0x2C4FEC3D0EFA9FC0, ped), true, false, false, false, false)
+	    Citizen.InvokeNative(0x01F661BB9C71B465, ped, 4, N_0xf4601c1203b1a78d(emote, ind))
+	    Citizen.InvokeNative(0x408CF580C5E96D49, ped, 4)
+	end
 end
 
 AddEventHandler('onResourceStop', function(resourceName)
